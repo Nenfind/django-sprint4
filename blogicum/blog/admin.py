@@ -11,7 +11,7 @@ class CategoryAdmin(admin.ModelAdmin):
         'description',
         'slug',
         'is_published',
-        'created_at'
+        'created_at',
     )
     list_editable = (
         'description',
@@ -34,7 +34,8 @@ class PostAdmin(admin.ModelAdmin):
         'location',
         'category',
         'is_published',
-        'created_at'
+        'created_at',
+        'image'
     )
     list_editable = (
         'pub_date',

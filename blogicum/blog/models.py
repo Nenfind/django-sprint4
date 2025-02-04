@@ -47,6 +47,7 @@ class Category(PublishedCreatedModel):
     class Meta:
         verbose_name = 'категория'
         verbose_name_plural = 'Категории'
+        ordering = ('slug',)
 
     def __str__(self):
         return self.title[:MAX_STR]
@@ -77,6 +78,7 @@ class Post(PublishedCreatedModel):
 
     title = models.CharField(verbose_name='Заголовок', max_length=MAX_LENGTH)
     text = models.TextField(verbose_name='Текст')
+    image = models.ImageField('Фото', upload_to='post_images', blank=True)
     pub_date = models.DateTimeField(
         verbose_name='Дата и время публикации',
         help_text=(
@@ -110,7 +112,27 @@ class Post(PublishedCreatedModel):
     class Meta:
         verbose_name = 'публикация'
         verbose_name_plural = 'Публикации'
-        ordering = ['-pub_date']
+        ordering = ('pub_date',)
 
     def __str__(self):
         return self.title[:MAX_STR]
+
+
+class Comment(models.Model):
+
+    created_at = models.DateTimeField('Добавлено', auto_now_add=True)
+    text = models.TextField('Текст комментария', max_length=MAX_LENGTH)
+    author = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='comments',
+        verbose_name='Автор комментария',
+    )
+    post = models.ForeignKey(
+        Post,
+        on_delete=models.CASCADE,
+        related_name='comments',
+        verbose_name='Пост комментария'
+    )
+    class Meta:
+        ordering = ('created_at',)
