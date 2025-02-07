@@ -216,9 +216,10 @@ class CommentDeleteView(OnlyAuthorMixin, ChangeCommentMixin, DeleteView):
 
 
 class ProfileCreateView(CreateView):
-    template_name = 'registration/registration_form.html'
-    form_class = UserCreationForm
+    template_name='registration/registration_form.html'
+    form_class=UserCreationForm
 
     def get_success_url(self):
-        """On success redirect to home page"""
+        """On success redirect to profile page"""
+
         return reverse('blog:index')
