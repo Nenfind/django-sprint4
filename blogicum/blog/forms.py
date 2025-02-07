@@ -35,9 +35,9 @@ class PostForm(forms.ModelForm):
             'image',
         )
         widgets = {
-            'pub_date': forms.DateInput(
-                attrs={'type': 'date',
-                       'value': datetime.now().strftime("%Y-%m-%d")
+            'pub_date': forms.DateTimeInput(
+                attrs={'format': '%d.%m.%Y %H:%M',
+                       'value': datetime.now().strftime('%d.%m.%Y %H:%M')
                        }
             ),
         }

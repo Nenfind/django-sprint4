@@ -104,7 +104,6 @@ class Post(PublishedCreatedModel):
         Category,
         on_delete=models.SET_NULL,
         null=True,
-        blank=False,
         related_name='posts',
         verbose_name='Категория'
     )
@@ -136,4 +135,9 @@ class Comment(models.Model):
     )
 
     class Meta:
+        verbose_name = 'Комментарий'
+        verbose_name_plural = 'Комментарии'
         ordering = ('created_at',)
+
+    def __str__(self):
+        return self.text[:MAX_STR]
