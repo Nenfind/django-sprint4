@@ -44,6 +44,11 @@ post_urls = [
 
 urlpatterns = [
     path('', views.HomePageView.as_view(), name='index'),
+    path(
+        'auth/registration/',
+        views.ProfileCreateView.as_view(),
+        name='registration'
+    ),
     path('posts/', include(post_urls)),
     path(
         'category/<slug:category_slug>/',

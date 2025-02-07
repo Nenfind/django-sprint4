@@ -1,4 +1,5 @@
 from django.contrib.auth import get_user_model
+from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
@@ -212,3 +213,12 @@ class CommentDeleteView(OnlyAuthorMixin, ChangeCommentMixin, DeleteView):
     """Delete comment on a post"""
 
     model = Comment
+
+
+class ProfileCreateView(CreateView):
+    template_name = 'registration/registration_form.html'
+    form_class = UserCreationForm
+
+    def get_success_url(self):
+        """On success redirect to home page"""
+        return reverse('blog:index')
