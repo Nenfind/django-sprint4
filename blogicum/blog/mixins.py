@@ -1,11 +1,8 @@
 from django.contrib.auth.mixins import UserPassesTestMixin
-from django.db.models import Count
-from django.http import HttpResponseRedirect
-from django.shortcuts import get_object_or_404
+from django.shortcuts import redirect, get_object_or_404
 from django.urls import reverse
-from django.utils import timezone
 
-from .models import Post, Comment
+from blog.models import Comment
 
 
 class OnlyAuthorMixin(UserPassesTestMixin):
@@ -17,33 +14,10 @@ class OnlyAuthorMixin(UserPassesTestMixin):
         return object.author == self.request.user
 
     def handle_no_permission(self):
-        return HttpResponseRedirect(reverse(
+        return redirect(reverse(
             'blog:post_detail',
             kwargs={'post_id': self.kwargs['post_id']})
         )
-
-
-def my_queryset(model=None, posted=True, comment=False, order=True):
-    if not model:
-        model = Post.objects
-    queryset = model.select_related(
-        'location',
-        'author',
-        'category',
-    )
-    if posted:
-        queryset = queryset.filter(
-            pub_date__lte=timezone.now(),
-            is_published=True,
-            category__is_published=True
-        )
-    if comment:
-        queryset = queryset.annotate(
-            comment_count=Count('comments')
-        )
-    if order:
-        queryset = queryset.order_by('-pub_date')
-    return queryset
 
 
 class ChangeCommentMixin:

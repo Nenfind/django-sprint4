@@ -2,7 +2,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import get_object_or_404
-from django.urls import reverse
+from django.urls import reverse, reverse_lazy
 from django.views.generic import (
     CreateView,
     DeleteView,
@@ -13,8 +13,9 @@ from django.views.generic import (
 
 from blogicum.settings import PAGE_LIMIT
 from .forms import ProfileForm, PostForm, CommentForm
+from .mixins import OnlyAuthorMixin, ChangeCommentMixin
 from .models import Category, Post, Comment
-from .utils import OnlyAuthorMixin, my_queryset, ChangeCommentMixin
+from .query_utils import base_post_queryset
 
 User = get_user_model()
 
@@ -28,7 +29,7 @@ class HomePageView(ListView):
 
     def get_queryset(self):
         """Get eligible for show posts"""
-        return my_queryset(comment=True, order=True)
+        return base_post_queryset(comment=True)
 
 
 class CategoryListView(ListView):
@@ -48,10 +49,9 @@ class CategoryListView(ListView):
         return category
 
     def get_queryset(self):
-        queryset = my_queryset(
-            model=self.get_category().posts,
+        queryset = base_post_queryset(
+            manager=self.get_category().posts,
             comment=True,
-            order=True
         )
         return queryset
 
@@ -74,21 +74,19 @@ class ProfileListView(ListView):
         """Get all posts if requesting user is owner of the profile
         or eligible for show posts otherwise
         """
-        if self.request.user.username == self.get_user().get_username():
-            queryset = my_queryset(
-                posted=False,
-                comment=True
-            ).filter(author=self.get_user())
-        else:
-            queryset = my_queryset(
-                comment=True
-            ).filter(author=self.get_user())
+        user = self.get_user()
+        queryset = base_post_queryset(
+            manager=user.posts,
+            posted=self.request.user != user,
+            comment=True
+        )
         return queryset
 
     def get_context_data(self, **kwargs):
         """Add profile data to context"""
+        user = self.get_user()
         context = super(ProfileListView, self).get_context_data(**kwargs)
-        context['profile'] = self.get_user()
+        context['profile'] = user
         return context
 
 
@@ -127,11 +125,11 @@ class PostDetailView(DetailView):
 
     def get_object(self, queryset=None):
         post = get_object_or_404(
-            my_queryset(posted=False, comment=True), id=self.kwargs['post_id']
+            base_post_queryset(posted=False), id=self.kwargs['post_id']
         )
         if self.request.user != post.author:
             post = get_object_or_404(
-                my_queryset(comment=True), id=self.kwargs['post_id']
+                base_post_queryset(), id=self.kwargs['post_id']
             )
         return post
 
@@ -175,10 +173,7 @@ class PostDeleteView(OnlyAuthorMixin, DeleteView):
     model = Post
     template_name = 'blog/create.html'
     pk_url_kwarg = 'post_id'
-
-    def get_success_url(self):
-        """On success redirects back to home page"""
-        return reverse('blog:index')
+    success_url = reverse_lazy('blog:index')
 
 
 class CommentCreateView(LoginRequiredMixin, CreateView):
@@ -211,8 +206,6 @@ class CommentUpdateView(OnlyAuthorMixin, ChangeCommentMixin, UpdateView):
 
 class CommentDeleteView(OnlyAuthorMixin, ChangeCommentMixin, DeleteView):
     """Delete comment on a post"""
-
-    model = Comment
 
 
 class ProfileCreateView(CreateView):
